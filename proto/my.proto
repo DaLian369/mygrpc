@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+option go_package= "mygrpc/proto";
+
+package proto;
+
+service Greeter {
+  // Sends a greeting
+  rpc SayHello (HelloRequest) returns (HelloReply) {}
+  rpc Exchange (ExchangeParam) returns (Resp){}
+}
+
+// The request message containing the user's name.
+message HelloRequest {
+  string name = 1;
+}
+
+// The response message containing the greetings
+message HelloReply {
+  string message = 1;
+}
+
+message ExchangeParam {
+  int64 From = 1;
+  int64 To = 2;
+  int64 Value = 3;
+  string Key = 4;
+}
+
+message Resp {
+  int64 Ret = 1;
+}

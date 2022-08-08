@@ -1,0 +1,8 @@
+mysql:
+  hostport: 127.0.0.1:3306
+  username: root
+  password: xuelei123
+  database: kv
+  poolsize: 20
+  idlesize: 10
+  max_life_time: 10
