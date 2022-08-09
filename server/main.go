@@ -44,7 +44,7 @@ func main() {
 	}
 
 	// 初始化数据库
-	err = logic.Init(&cfg.Mysql)
+	err = logic.Init(cfg)
 	if err != nil {
 		PrintAndDie(err.Error())
 	}
@@ -70,7 +70,7 @@ func main() {
 func PrintAndDie(msg string) {
 	// 报告函数调用信息
 	_, file, line, _ := runtime.Caller(1)
-	fmt.Println(os.Stderr, "file %s, line %d, %s\n", file, line, msg)
+	log.Printf("err: %v, file %s, line %d, %s", os.Stderr, file, line, msg)
 	time.Sleep(1)
 	// 程序退出，0表示成功，非0表示失败
 	os.Exit(1)

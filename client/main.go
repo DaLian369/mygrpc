@@ -3,11 +3,12 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"log"
 	"mygrpc/proto"
+	"sync"
 	"time"
 
-	"github.com/google/uuid"
 	"google.golang.org/grpc/credentials/insecure"
 
 	"google.golang.org/grpc"
@@ -33,19 +34,31 @@ func main() {
 	// 创建客户端
 	c := proto.NewGreeterClient(conn)
 
+	var from int64 = 1
+	var to int64 = 2
 	// 超时控制
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 	// 发送请求并接受响应
-	r, err := c.SayHello(ctx, &proto.HelloRequest{Name: *name})
+	r, err := c.SayHello(ctx, &proto.HelloRequest{Name: *name, Id: from})
 	if err != nil {
 		log.Fatalf("could not greet: %v", err)
 	}
-	log.Printf("Greeting: %s", r.GetMessage())
+	log.Printf("Greeting: %s, %s", r.GetMessage(), r.GetUuid())
 
-	er, err := c.Exchange(ctx, &proto.ExchangeParam{From: 1, To: 2, Value: 1, Key: uuid.New().String()})
-	if err != nil {
-		log.Fatalf("could not greet: %v", err)
+	// 并发转账
+	limit := 10
+	wg := sync.WaitGroup{}
+	wg.Add(limit)
+	for i := 0; i < limit; i++ {
+		go func(t int) {
+			defer wg.Done()
+			er, err := c.Exchange(ctx, &proto.ExchangeParam{From: from, To: to, Value: 1, Key: r.GetUuid()})
+			if err != nil {
+				fmt.Println("could not exchange:", err, t)
+			}
+			log.Printf("Exchange: %d %d", er.GetRet(), t)
+		}(i)
 	}
-	log.Printf("Exchange: %d", er.GetRet())
+	wg.Wait()
 }

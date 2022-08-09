@@ -6,3 +6,9 @@ mysql:
   poolsize: 20
   idlesize: 10
   max_life_time: 10
+
+redis:
+  hostport: 127.0.0.1:6379
+  auth:
+  timeout: 5
+  poolsize: 5
