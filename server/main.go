@@ -13,6 +13,7 @@ import (
 	"mygrpc/proto"
 	"mygrpc/server/controller"
 	"mygrpc/server/logic"
+	"mygrpc/server/xlkafka"
 
 	"google.golang.org/grpc"
 
@@ -29,6 +30,8 @@ var (
 func main() {
 	// go pprof信息
 	go http.ListenAndServe(":9000", nil) // 127.0.0.1:9000/debug/pprof
+	// 设置日志格式
+	log.SetFlags(log.Ldate | log.Ltime | log.Llongfile)
 	// 获取配置文件路径
 	var configPath string
 	flag.StringVar(&configPath, "c", "", "config path")
@@ -39,6 +42,12 @@ func main() {
 	// 加载配置文件
 	cfg := new(proto.ConfigSt)
 	err := conf.Init(configPath, cfg)
+	if err != nil {
+		PrintAndDie(err.Error())
+	}
+
+	// 初始化kafka
+	err = xlkafka.InitWriter(&cfg.Kafka)
 	if err != nil {
 		PrintAndDie(err.Error())
 	}
@@ -69,8 +78,8 @@ func main() {
 
 func PrintAndDie(msg string) {
 	// 报告函数调用信息
-	_, file, line, _ := runtime.Caller(1)
-	log.Printf("err: %v, file %s, line %d, %s", os.Stderr, file, line, msg)
+	pc, file, line, _ := runtime.Caller(1)
+	log.Printf("err: %v, file %s, func: %s, line %d, %s", os.Stderr, file, runtime.FuncForPC(pc).Name(), line, msg)
 	time.Sleep(1)
 	// 程序退出，0表示成功，非0表示失败
 	os.Exit(1)

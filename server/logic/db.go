@@ -2,9 +2,12 @@ package logic
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log"
 	"mygrpc/proto"
+	"mygrpc/server/xlkafka"
+	"strconv"
 	"strings"
 	"time"
 
@@ -118,9 +121,10 @@ func (p *ProcessSt) Exchange(from, fromMoney, to, toMoney int64, uuid string) (e
 		return
 	}
 	// 插入订单
-	sql = fmt.Sprintf("insert into `order` (`from`, from_money, `to`, to_money) values(%d, %d, %d, %d)", from, fromMoney, to, toMoney)
-	_, err = tx.Exec(sql)
-	if err != nil {
+	sql = fmt.Sprintf("insert into `order` (`from`, from_money, `to`, to_money, ct) values(%d, %d, %d, %d, %d)", from, fromMoney, to, toMoney, time.Now().Unix())
+	or, err := tx.Exec(sql)
+	orderId, _ := or.LastInsertId()
+	if err != nil || orderId <= 0 {
 		log.Printf("order err: %v", err)
 		tx.Rollback()
 		return
@@ -165,5 +169,22 @@ func (p *ProcessSt) Exchange(from, fromMoney, to, toMoney int64, uuid string) (e
 	}
 	tx.Commit()
 	p.cache.SuccExchangeKey(from, uuid)
+	// 订单信息写入es
+	go func() {
+		sql := fmt.Sprintf("select * from `order` where id = %d", orderId)
+		r := db.QueryRow(sql)
+		o := &proto.Order{}
+		err = r.Scan(&o.Id, &o.From, &o.FromMoney, &o.To, &o.ToMoney, &o.Ext, &o.Ct)
+		if err != nil {
+			log.Printf("query order err: %s", err.Error())
+			return
+		}
+		bs, err := json.Marshal(o)
+		if err != nil {
+			log.Printf("json marshal err: %s", err.Error())
+			return
+		}
+		xlkafka.SendMsg(proto.ExchangeTopic, strconv.FormatInt(orderId, 10), string(bs))
+	}()
 	return
 }

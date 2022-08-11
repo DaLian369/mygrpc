@@ -14,7 +14,8 @@ create table `order` (
     `from_money` bigint not null,
     `to` bigint not null,
     `to_money` bigint not null,
-    `ext` varchar(128),
+    `ext` varchar(128) not null default "",
+    `ct` bigint not null,
     primary key (`id`)
 ) engine=innodb default charset=utf8;
 

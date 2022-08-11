@@ -11,4 +11,9 @@ redis:
   hostport: 127.0.0.1:6379
   auth:
   timeout: 5
-  poolsize: 5
+  poolsize: 
+
+kafka:
+  hostports: 127.0.0.1:9092
+  concurrent: 3
+  enable: true

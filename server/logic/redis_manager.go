@@ -119,5 +119,8 @@ func (w *RedisManager) Del(args ...interface{}) (err error) {
 func (w *RedisManager) Eval(script string, keynum int, args ...interface{}) (result interface{}, err error) {
 	a := append([]interface{}{script, keynum}, args...)
 	_, err = w.do("eval", a...)
+	if err == redis.ErrNil {
+		err = nil
+	}
 	return
 }
