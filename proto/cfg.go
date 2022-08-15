@@ -1,10 +1,11 @@
 package proto
 
 type ConfigSt struct {
-	Mysql   MysqlSt   `json:"mysql" yaml:"mysql"`
-	Redis   RedisSt   `json:"redis" yaml:"redis"`
-	LogType LogTypeSt `json:"logger" yaml:"logger"`
-	Kafka   KafkaSt   `json:"kafka" yaml:"kafka"`
+	Mysql       MysqlSt             `json:"mysql" yaml:"mysql"`
+	Redis       RedisSt             `json:"redis" yaml:"redis"`
+	LogType     LogTypeSt           `json:"logger" yaml:"logger"`
+	KafkaWriter KafkaWriterConfigSt `json:"kafka_writer" yaml:"kafka_writer"`
+	KafkaReader KafkaReaderConfigSt `json:"kafka_reader" yaml:"kafka_reader"`
 }
 
 type MysqlSt struct {
@@ -33,8 +34,16 @@ type LogTypeSt struct {
 	FileFilename string `json:"file.filename" yaml:"file.filename"`
 }
 
-type KafkaSt struct {
+type KafkaWriterConfigSt struct {
 	Hostports  string `json:"hostports" yaml:"hostports"`
 	Concurrent int64  `json:"concurrent" yaml:"concurrent"`
 	Enable     bool   `json:"enable" yaml:"enable"`
+}
+
+type KafkaReaderConfigSt struct {
+	Enable     bool   `json:"enable" yaml:"enable"`
+	Hostports  string `json:"hostports" yaml:"hostports"`
+	Topic      string `json:"topic" yaml:"topic"`
+	GroupId    string `json:"group_id" yaml:"group_id"`
+	MsgDecoder string `json:"msg_decoder" yaml:"msg_decoder"`
 }

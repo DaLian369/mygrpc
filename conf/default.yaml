@@ -13,7 +13,14 @@ redis:
   timeout: 5
   poolsize: 
 
-kafka:
+kafka_writer:
   hostports: 127.0.0.1:9092
   concurrent: 3
   enable: true
+
+kafka_reader:
+  enable: true
+  hostports: 127.0.0.1:9092
+  topic: exchange
+  group_id: script
+  msg_decoder: "raw"

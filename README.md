@@ -27,7 +27,7 @@
 
 [f] 缓存、连接池
 
-[w] 消息队列 kafka
+[f] 消息队列 kafka
 
 [w] websocket
 

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
@@ -24,6 +25,7 @@ import (
 var (
 	port = flag.Int("port", 50051, "The server port")
 )
+var DefaultKafkaReader *xlkafka.KafkaReader
 
 // 读配置done go pprof done  数据库 连接池 事务 缓存 消息队列 日志 监控 websocket prometheus
 
@@ -46,10 +48,18 @@ func main() {
 		PrintAndDie(err.Error())
 	}
 
-	// 初始化kafka
-	err = xlkafka.InitWriter(&cfg.Kafka)
+	// 初始化kafka写入
+	err = xlkafka.InitWriter(&cfg.KafkaWriter)
 	if err != nil {
 		PrintAndDie(err.Error())
+	}
+	//
+	DefaultKafkaReader, err = xlkafka.NewKafakReader(&cfg.KafkaReader)
+	if err != nil {
+		PrintAndDie(err.Error())
+	}
+	if DefaultKafkaReader != nil {
+		go KafkaReaderRun()
 	}
 
 	// 初始化数据库
@@ -74,6 +84,21 @@ func main() {
 		log.Fatalf("failed to serve: %v", err)
 	}
 
+}
+
+func KafkaReaderRun() {
+	log.Println("server run success")
+	for d := range DefaultKafkaReader.Open() {
+		data, ok := d.([]byte)
+		if !ok {
+			log.Printf("bad log entry: %v", d)
+			continue
+		}
+		o := proto.Order{}
+		json.Unmarshal(data, &o)
+		log.Printf("kafka reader entry: %+v", o)
+		// 在这里如果要保证多线程
+	}
 }
 
 func PrintAndDie(msg string) {

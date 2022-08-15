@@ -39,7 +39,7 @@ type Writer struct {
 
 var defaultWriter *Writer
 
-func InitWriter(cfg *proto.KafkaSt) (err error) {
+func InitWriter(cfg *proto.KafkaWriterConfigSt) (err error) {
 	if !cfg.Enable {
 		return
 	}
@@ -47,7 +47,7 @@ func InitWriter(cfg *proto.KafkaSt) (err error) {
 	return
 }
 
-func NewKafkaProducer(cfg *proto.KafkaSt) (w *Writer, err error) {
+func NewKafkaProducer(cfg *proto.KafkaWriterConfigSt) (w *Writer, err error) {
 	w = new(Writer)
 	err = w.init(cfg)
 	if err != nil {
@@ -86,7 +86,7 @@ func (w *Writer) SendMsg(topic, key, value string) (err error) {
 	return
 }
 
-func (w *Writer) init(cfg *proto.KafkaSt) (err error) {
+func (w *Writer) init(cfg *proto.KafkaWriterConfigSt) (err error) {
 	w.output = make(chan *Message, defaultChannelSize)
 	w.waitRun = new(sync.WaitGroup)
 	w.stopChan = make(chan bool)
