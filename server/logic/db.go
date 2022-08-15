@@ -171,10 +171,13 @@ func (p *ProcessSt) Exchange(from, fromMoney, to, toMoney int64, uuid string) (e
 	p.cache.SuccExchangeKey(from, uuid)
 	// 订单信息写入es
 	go func() {
-		sql := fmt.Sprintf("select * from `order` where id = %d", orderId)
+		sql := fmt.Sprintf("select *, ct from `order` where id = %d", orderId)
 		r := db.QueryRow(sql)
+		rs, err := db.Query(sql)
+		ss, _ := rs.Columns()
+		fmt.Println("columns", ss)
 		o := &proto.Order{}
-		err = r.Scan(&o.Id, &o.From, &o.FromMoney, &o.To, &o.ToMoney, &o.Ext, &o.Ct)
+		err = r.Scan(&o.Id, &o.From, &o.FromMoney, &o.To, &o.ToMoney, &o.Ext, &o.Ct, &o.Ct)
 		if err != nil {
 			log.Printf("query order err: %s", err.Error())
 			return

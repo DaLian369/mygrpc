@@ -7,7 +7,9 @@ import (
 	"log"
 	"net"
 	"os"
+	"os/signal"
 	"runtime"
+	"syscall"
 	"time"
 
 	"mygrpc/conf"
@@ -53,7 +55,7 @@ func main() {
 	if err != nil {
 		PrintAndDie(err.Error())
 	}
-	//
+	// 初始化kafka消费
 	DefaultKafkaReader, err = xlkafka.NewKafakReader(&cfg.KafkaReader)
 	if err != nil {
 		PrintAndDie(err.Error())
@@ -79,11 +81,17 @@ func main() {
 	// 注册handler
 	proto.RegisterGreeterServer(s, &controller.Server{})
 	log.Printf("server listening at %v", lis.Addr())
+	// sinal chan
+	singalChan := make(chan os.Signal)
+	signal.Notify(singalChan, syscall.SIGINT, syscall.SIGHUP, syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGTSTP)
 	// 服务启动
-	if err := s.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
-	}
-
+	go s.Serve(lis)
+	// if err := s.Serve(lis); err != nil {
+	// 	log.Fatalf("failed to serve: %v", err)
+	// }
+	<-singalChan
+	s.Stop()
+	stopAll()
 }
 
 func KafkaReaderRun() {
@@ -99,6 +107,10 @@ func KafkaReaderRun() {
 		log.Printf("kafka reader entry: %+v", o)
 		// 在这里如果要保证多线程
 	}
+}
+
+func stopAll() {
+	DefaultKafkaReader.Close()
 }
 
 func PrintAndDie(msg string) {

@@ -108,6 +108,7 @@ func (r *KafkaReader) process(msg *sarama.ConsumerMessage, output chan interface
 }
 
 func (r *KafkaReader) Close() {
+	// 这里关闭dying，阻塞，等待read()方法里关闭dead，消费完消息再返回
 	select {
 	case <-r.dying:
 		return
