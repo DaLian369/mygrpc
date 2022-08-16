@@ -37,6 +37,8 @@
 
 [f] 测试
 
+[f] grpcurl
+
 ## server
 启动`go run server/main.go -c conf/default.yaml`
 
@@ -60,7 +62,7 @@ scan+xargs批量删除:
 
 坑：
 
-1、`conn.Do()`方法的返回结果需要使用`redis.String()`或其他方法包装后返回。
+1、`conn.Do()`方法的返回结果需要使用`redis.String()`或其他方法包装后返回，否则不反悔nil错误。
 
 2、互斥锁解开使用lua脚本`if redis.call("get", KEYS[1]) == ARGV[1] then redis.call("del", KEYS[1]) else return 0 end`
 
@@ -84,4 +86,53 @@ url `http://127.0.0.1:9000/metrics`
 cd server/logic
 go test -v
 ```
+
+## grpcurl
+mac安装 `brew install grpcurl`
+
+启动反射服务 `reflection.Register(s)`
+
+查看服务列表
+```shell
+$ grpcurl -plaintext 127.0.0.1:50051 list
+grpc.reflection.v1alpha.ServerReflection
+proto.Greeter
+```
+
+服务的方法列表
+```shell
+$ grpcurl -plaintext 127.0.0.1:50051 list proto.Greeter
+proto.Greeter.Exchange
+proto.Greeter.SayHello
+
+# describe 子命令详细信息
+$ grpcurl -plaintext 127.0.0.1:50051 describe
+grpc.reflection.v1alpha.ServerReflection is a service:
+service ServerReflection {
+  rpc ServerReflectionInfo ( stream .grpc.reflection.v1alpha.ServerReflectionRequest ) returns ( stream .grpc.reflection.v1alpha.ServerReflectionResponse );
+}
+proto.Greeter is a service:
+service Greeter {
+  rpc Exchange ( .proto.ExchangeParam ) returns ( .proto.Resp );
+  rpc SayHello ( .proto.HelloRequest ) returns ( .proto.HelloReply );
+}
+
+$ grpcurl -plaintext 127.0.0.1:50051 describe proto.Greeter
+proto.Greeter is a service:
+service Greeter {
+  rpc Exchange ( .proto.ExchangeParam ) returns ( .proto.Resp );
+  rpc SayHello ( .proto.HelloRequest ) returns ( .proto.HelloReply );
+}
+```
+
+调用方法
+```shell
+$ grpcurl -plaintext -d '{"name": "xl", "id": 1}' 127.0.0.1:50051 proto.Greeter/SayHello
+{
+  "message": "Hello again xl",
+  "uuid": "0d98a9a6-992b-45c0-a498-92dad9bedb9c"
+}
+```
+
+
 

@@ -20,6 +20,7 @@ import (
 	"mygrpc/server/xlkafka"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 
 	"net/http"
 	_ "net/http/pprof"
@@ -87,6 +88,8 @@ func main() {
 	// 注册handler
 	proto.RegisterGreeterServer(s, &controller.Server{})
 	log.Printf("server listening at %v", lis.Addr())
+	// grpcurl 启动反射服务，Protobuf 本身具有反射功能，可以在运行时获取对象的 Proto 文件。gRPC 同样也提供了一个名为 reflection 的反射包，用于为 gRPC 服务提供查询。
+	reflection.Register(s)
 	// sinal chan
 	singalChan := make(chan os.Signal)
 	signal.Notify(singalChan, syscall.SIGINT, syscall.SIGHUP, syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGTSTP)
