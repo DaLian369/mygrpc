@@ -16,6 +16,7 @@ import (
 	"mygrpc/proto"
 	"mygrpc/server/controller"
 	"mygrpc/server/logic"
+	"mygrpc/server/monitor"
 	"mygrpc/server/xlkafka"
 
 	"google.golang.org/grpc"
@@ -62,6 +63,11 @@ func main() {
 	}
 	if DefaultKafkaReader != nil {
 		go KafkaReaderRun()
+	}
+	// 初始化prometheus
+	err = monitor.InitPrometheus()
+	if err != nil {
+		PrintAndDie(err.Error())
 	}
 
 	// 初始化数据库

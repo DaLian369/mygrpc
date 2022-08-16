@@ -33,7 +33,7 @@
 
 [f] 日志
 
-[w] 监控
+[f] 监控 prometheus
 
 [f] 测试
 
@@ -73,7 +73,11 @@ else
 end
 ```
 
+## go pprof
+url `http://127.0.0.1:9000/debug/pprof/`
 
+## prometheus
+url `http://127.0.0.1:9000/metrics`
 
 ## 测试
 ```sh

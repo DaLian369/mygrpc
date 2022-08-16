@@ -4,6 +4,7 @@ import (
 	"context"
 	"mygrpc/proto"
 	"mygrpc/server/logic"
+	"mygrpc/server/monitor"
 )
 
 type Server struct {
@@ -20,11 +21,12 @@ func (s *Server) SayHello(ctx context.Context, in *proto.HelloRequest) (*proto.H
 	if err != nil {
 		return &proto.HelloReply{Message: "uuid failed"}, nil
 	}
-
 	return &proto.HelloReply{Message: "Hello again " + in.GetName(), Uuid: uid}, nil
 }
 
 func (s *Server) Exchange(ctx context.Context, in *proto.ExchangeParam) (*proto.Resp, error) {
+	// prometheus req 自增1
+	monitor.Reqs.Inc()
 	if in.From <= 0 || in.To <= 0 || in.Value <= 0 || len(in.Key) <= 0 {
 		return &proto.Resp{Ret: -1}, nil
 	}
