@@ -47,7 +47,7 @@ func main() {
 	log.Printf("Greeting: %s, %s", r.GetMessage(), r.GetUuid())
 
 	// 并发转账
-	limit := 10
+	limit := 1
 	wg := sync.WaitGroup{}
 	wg.Add(limit)
 	for i := 0; i < limit; i++ {

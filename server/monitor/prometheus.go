@@ -8,15 +8,16 @@ import (
 )
 
 var (
-	Reqs = prometheus.NewGauge(prometheus.GaugeOpts{
-		Namespace: "xxx",
-		Name:      "yyy",
-		Help:      "hhh",
-	})
+	Reqs = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Namespace: "rpc_server",
+		Name:      "reqs",
+		Help:      "reqs",
+		Buckets:   []float64{3, 8, 15, 30, 50, 100, 300, 600, 1000},
+	}, []string{"uri"})
 )
 
 func InitPrometheus() (err error) {
-	prometheus.Register(Reqs)
+	prometheus.MustRegister(Reqs)
 	http.Handle("/metrics", promhttp.Handler())
 	return
 }

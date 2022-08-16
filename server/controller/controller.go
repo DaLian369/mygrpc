@@ -2,14 +2,53 @@ package controller
 
 import (
 	"context"
+	"encoding/json"
+	"log"
 	"mygrpc/proto"
 	"mygrpc/server/logic"
 	"mygrpc/server/monitor"
+	"time"
+
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/peer"
 )
 
 type Server struct {
 	proto.UnimplementedGreeterServer
 	cnt int64
+}
+
+// 一元拦截器
+func UnaryServerInterceptor1(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
+	remote, _ := peer.FromContext(ctx)
+	remoteAddr := remote.Addr.String()
+
+	in, _ := json.Marshal(req)
+	inStr := string(in)
+	log.Println("ip", remoteAddr, "access_start", info.FullMethod, "in", inStr)
+
+	// prometheus req 自增1
+	monitor.Reqs.WithLabelValues(info.FullMethod).Observe(1)
+
+	start := time.Now()
+	defer func() {
+		out, _ := json.Marshal(resp)
+		outStr := string(out)
+		duration := int64(time.Since(start) / time.Millisecond)
+		log.Println("ip", remoteAddr, "access_end", info.FullMethod, "in", inStr, "out", outStr, "err", err, "duration/ms", duration)
+	}()
+
+	resp, err = handler(ctx, req)
+
+	return
+}
+
+func UnaryServerInterceptor2(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
+
+	log.Println("UnaryServerInterceptor2")
+	resp, err = handler(ctx, req)
+
+	return
 }
 
 func (s *Server) SayHello(ctx context.Context, in *proto.HelloRequest) (*proto.HelloReply, error) {
@@ -25,8 +64,6 @@ func (s *Server) SayHello(ctx context.Context, in *proto.HelloRequest) (*proto.H
 }
 
 func (s *Server) Exchange(ctx context.Context, in *proto.ExchangeParam) (*proto.Resp, error) {
-	// prometheus req 自增1
-	monitor.Reqs.Inc()
 	if in.From <= 0 || in.To <= 0 || in.Value <= 0 || len(in.Key) <= 0 {
 		return &proto.Resp{Ret: -1}, nil
 	}

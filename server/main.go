@@ -83,8 +83,11 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 		return
 	}
-	// 创建grpc server
-	s := grpc.NewServer()
+	// 创建grpc server，拦截器
+	s := grpc.NewServer(
+		grpc.UnaryInterceptor(controller.UnaryServerInterceptor1),                                          // 只能设置一个一元拦截器
+		grpc.ChainUnaryInterceptor(controller.UnaryServerInterceptor2, controller.UnaryServerInterceptor2), // 可以设置多个链式拦截器
+	)
 	// 注册handler
 	proto.RegisterGreeterServer(s, &controller.Server{})
 	log.Printf("server listening at %v", lis.Addr())
